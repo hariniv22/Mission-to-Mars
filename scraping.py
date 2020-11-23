@@ -3,7 +3,6 @@
 # Import Splinter and BeautifulSoup
 from splinter import Browser
 from bs4 import BeautifulSoup as soup
-#from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
 import datetime as dt
 
@@ -12,22 +11,18 @@ def scrape_all():
     executable_path = {'executable_path': '/Users/harini/.wdm/drivers/chromedriver/mac64/86.0.4240.22/chromedriver'}
     browser = Browser("chrome", **executable_path, headless=True)
     news_title, news_paragraph = mars_news(browser)
-
     # Run all scraping functions and store results in dictionary
     data = {
       "news_title": news_title,
       "news_paragraph": news_paragraph,
       "featured_image": featured_image(browser),
       "facts": mars_facts(),
-      "last_modified": dt.datetime.now()
-    }
+      "last_modified": dt.datetime.now(),
+      "hemisphear_image_urls": hemisphear(browser)
+    }  
     # Stop webdriver and return data
     browser.quit()
     return data
-
-# Set the executable path and initialize the chrome browser in splinter
-# executable_path = {'executable_path': '/Users/harini/.wdm/drivers/chromedriver/mac64/86.0.4240.22/chromedriver'}
-# browser = Browser('chrome', **executable_path)
 
 def mars_news(browser):
     # Visit the mars nasa news site
@@ -94,6 +89,26 @@ def mars_facts():
     df.set_index('description', inplace=True)
 
     return df.to_html() 
+
+def hemisphear(browser):
+     # visit url
+    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    browser.visit(url)
+    # Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+
+    # Write code to retrieve the image urls and titles for each hemisphere.
+    product_results = browser.find_by_css("a.product-item h3")
+    hemisphears = {}
+    for i in range(len(product_results)):
+        browser.find_by_css("a.product-item h3")[i].click()
+        img_url = browser.links.find_by_text("Sample")["href"]
+        title = browser.find_by_css("h2.title").text
+        hemisphears = {"img_url":img_url,
+                        "title": title }
+        hemisphere_image_urls.append(hemisphears)
+        browser.back()
+    return hemisphere_image_urls
 
 if __name__ == "__main__":
     # If running as script, print scraped data
